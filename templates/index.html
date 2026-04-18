@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Summary App</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; }
+        h1 { color: #232f3e; }
+        .upload-box { border: 2px dashed #aaa; padding: 30px; text-align: center; border-radius: 8px; margin: 20px 0; }
+        input[type=file] { margin: 10px 0; }
+        button { background: #ff9900; color: white; border: none; padding: 10px 24px; font-size: 16px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #e88a00; }
+        .flash { background: #ffe0e0; border: 1px solid #f00; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        nav a { margin-right: 16px; color: #0073bb; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <nav><a href="/">Upload</a><a href="/history">History</a></nav>
+    <h1>Document Summary Web App</h1>
+    <p>Upload a text-based PDF to generate an AI-powered summary using Google Gemini.</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="flash">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+        <div class="upload-box">
+            <p>Select a PDF file (text-based, a few pages):</p>
+            <input type="file" name="file" accept=".pdf" required>
+            <br><br>
+            <button type="submit">Upload &amp; Summarise</button>
+        </div>
+    </form>
+</body>
+</html>

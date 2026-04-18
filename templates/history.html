@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload History</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        h1 { color: #232f3e; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #232f3e; color: white; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; vertical-align: top; }
+        tr:hover { background: #f9f9f9; }
+        .summary-cell { max-width: 400px; white-space: pre-wrap; font-size: 0.9em; }
+        nav a { margin-right: 16px; color: #0073bb; text-decoration: none; font-weight: bold; }
+        .none { color: #888; }
+    </style>
+</head>
+<body>
+    <nav><a href="/">Upload</a><a href="/history">History</a></nav>
+    <h1>Upload History</h1>
+    {% if documents %}
+    <table>
+        <tr>
+            <th>Filename</th>
+            <th>S3 Key</th>
+            <th>Summary</th>
+            <th>Uploaded At</th>
+        </tr>
+        {% for doc in documents %}
+        <tr>
+            <td>{{ doc[0] }}</td>
+            <td>{{ doc[1] }}</td>
+            <td class="summary-cell">{{ doc[2] }}</td>
+            <td>{{ doc[3].strftime('%Y-%m-%d %H:%M') if doc[3] else '' }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="none">No documents uploaded yet.</p>
+    {% endif %}
+</body>
+</html>

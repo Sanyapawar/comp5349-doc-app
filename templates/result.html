@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Summary Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; }
+        h1 { color: #232f3e; }
+        .summary-box { background: #f4f4f4; border-left: 4px solid #ff9900; padding: 16px; border-radius: 4px; white-space: pre-wrap; }
+        .meta { color: #555; font-size: 0.9em; margin-bottom: 10px; }
+        a { color: #0073bb; }
+        nav a { margin-right: 16px; color: #0073bb; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <nav><a href="/">Upload</a><a href="/history">History</a></nav>
+    <h1>Summary Generated</h1>
+    <div class="meta">
+        <strong>File:</strong> {{ filename }}<br>
+        <strong>S3 Key:</strong> {{ s3_key }}
+    </div>
+    <h2>Summary</h2>
+    <div class="summary-box">{{ summary }}</div>
+    <br>
+    <a href="/">Upload another document</a> | <a href="/history">View history</a>
+</body>
+</html>
