@@ -8,21 +8,21 @@ import PyPDF2
 import io
 
 app = Flask(__name__)
-app.secret_key = "comp5349-secret-key"
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "comp5349-secret-key")
 
-# ── Configuration ── fill these in after creating AWS resources ──────────────
-S3_BUCKET_NAME = "YOUR_S3_BUCKET_NAME"          # e.g. "comp5349-docs-yourname"
+# ── Configuration ── loaded from environment variables (.env on EC2) ──────────
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")       # e.g. "comp5349-docs-yourname"
 
-DB_HOST     = "YOUR_RDS_ENDPOINT"               # e.g. "xxx.rds.amazonaws.com"
-DB_PORT     = "5432"
-DB_NAME     = "docdb"
-DB_USER     = "postgres"
-DB_PASSWORD = "YOUR_DB_PASSWORD"
+DB_HOST     = os.getenv("DB_HOST")                  # e.g. "xxx.rds.amazonaws.com"
+DB_PORT     = os.getenv("DB_PORT", "5432")
+DB_NAME     = os.getenv("DB_NAME", "docdb")
+DB_USER     = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 
-GOOGLE_API_KEY = "YOUR_GOOGLE_GEMINI_API_KEY"
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 # ─────────────────────────────────────────────────────────────────────────────
 
-AWS_REGION = "us-east-1"   # AWS Academy default region
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
 # Configure Gemini
 genai.configure(api_key=GOOGLE_API_KEY)
