@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Summary App</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; }
@@ -10,11 +11,46 @@
         input[type=file] { margin: 10px 0; }
         button { background: #ff9900; color: white; border: none; padding: 10px 24px; font-size: 16px; border-radius: 4px; cursor: pointer; }
         button:hover { background: #e88a00; }
-        .flash { background: #ffe0e0; border: 1px solid #f00; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .flash { background: #ffe0e0; border: 1px solid #f00; padding: 10px; border-radius: 4px; margin: 10px 0; color: #a00; }
         nav a { margin-right: 16px; color: #0073bb; text-decoration: none; font-weight: bold; }
+
+        /* Loading overlay */
+        #loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            gap: 20px;
+        }
+        #loading-overlay.active { display: flex; }
+
+        .spinner {
+            width: 52px;
+            height: 52px;
+            border: 6px solid rgba(255,255,255,0.3);
+            border-top-color: #ff9900;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 16px; opacity: 0.9; }
     </style>
 </head>
 <body>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Uploading &amp; generating summary, please wait…</div>
+    </div>
+
     <nav><a href="/">Upload</a><a href="/history">History</a></nav>
     <h1>Document Summary Web App</h1>
     <p>Upload a text-based PDF to generate an AI-powered summary using Google Gemini.</p>
@@ -22,18 +58,27 @@
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         {% for msg in messages %}
-          <div class="flash">{{ msg }}</div>
+          <div class="flash">⚠️ {{ msg }}</div>
         {% endfor %}
       {% endif %}
     {% endwith %}
 
-    <form method="POST" action="/upload" enctype="multipart/form-data">
+    <form id="upload-form" method="POST" action="/upload" enctype="multipart/form-data">
         <div class="upload-box">
             <p>Select a PDF file (text-based, a few pages):</p>
-            <input type="file" name="file" accept=".pdf" required>
+            <input type="file" id="file-input" name="file" accept=".pdf" required>
             <br><br>
-            <button type="submit">Upload &amp; Summarise</button>
+            <button type="submit" id="submit-btn">Upload &amp; Summarise</button>
         </div>
     </form>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', function (e) {
+            const fileInput = document.getElementById('file-input');
+            if (!fileInput.files || fileInput.files.length === 0) return; // let browser validation handle
+            document.getElementById('loading-overlay').classList.add('active');
+            document.getElementById('submit-btn').disabled = true;
+        });
+    </script>
 </body>
 </html>

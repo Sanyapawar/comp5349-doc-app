@@ -24,6 +24,21 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
+# ── Startup validation ────────────────────────────────────────────────────────
+_REQUIRED_VARS = {
+    "S3_BUCKET_NAME": S3_BUCKET_NAME,
+    "DB_HOST":        DB_HOST,
+    "DB_PASSWORD":    DB_PASSWORD,
+    "GOOGLE_API_KEY": GOOGLE_API_KEY,
+}
+_missing = [k for k, v in _REQUIRED_VARS.items() if not v]
+if _missing:
+    raise RuntimeError(
+        f"Missing required environment variables: {', '.join(_missing)}. "
+        "Check your .env file or EC2 environment."
+    )
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Configure Gemini
 genai.configure(api_key=GOOGLE_API_KEY)
 
@@ -86,43 +101,64 @@ def upload():
 
     # 1. Upload to S3
     s3_key = f"uploads/{filename}"
-    s3_client.put_object(
-        Bucket=S3_BUCKET_NAME,
-        Key=s3_key,
-        Body=file_bytes,
-        ContentType="application/pdf",
-    )
+    try:
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=s3_key,
+            Body=file_bytes,
+            ContentType="application/pdf",
+        )
+    except Exception as e:
+        flash(f"S3 upload failed: {e}")
+        return redirect(url_for("index"))
 
     # 2. Extract text and generate summary
-    pdf_text = extract_text_from_pdf(file_bytes)
+    try:
+        pdf_text = extract_text_from_pdf(file_bytes)
+    except Exception as e:
+        flash(f"Could not read PDF: {e}")
+        return redirect(url_for("index"))
+
     if not pdf_text:
         flash("Could not extract text. Make sure it's a text-based PDF.")
         return redirect(url_for("index"))
 
-    summary = generate_summary(pdf_text)
+    try:
+        summary = generate_summary(pdf_text)
+    except Exception as e:
+        flash(f"AI summary generation failed: {e}")
+        return redirect(url_for("index"))
 
     # 3. Store metadata in RDS
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO documents (filename, s3_key, summary) VALUES (%s, %s, %s)",
-        (filename, s3_key, summary),
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO documents (filename, s3_key, summary) VALUES (%s, %s, %s)",
+            (filename, s3_key, summary),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        flash(f"Database error: {e}")
+        return redirect(url_for("index"))
 
     return render_template("result.html", filename=filename, s3_key=s3_key, summary=summary)
 
 
 @app.route("/history", methods=["GET"])
 def history():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT filename, s3_key, summary, uploaded_at FROM documents ORDER BY uploaded_at DESC")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT filename, s3_key, summary, uploaded_at FROM documents ORDER BY uploaded_at DESC")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        flash(f"Could not load history: {e}")
+        rows = []
     return render_template("history.html", documents=rows)
 
 
