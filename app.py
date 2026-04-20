@@ -52,7 +52,7 @@ def extract_text_from_pdf(file_bytes):
 
 def generate_summary(text):
     """Generate a concise summary using Google Gemini."""
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     prompt = (
         "Please provide a concise summary (3-5 sentences) of the following document:\n\n"
         + text[:10000]  # limit to avoid token overflow
