@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Load .env file before reading any env vars
 import boto3
 import psycopg2
-import google.generativeai as genai
+from openai import OpenAI
 from flask import Flask, request, render_template, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import PyPDF2
@@ -21,7 +21,7 @@ DB_NAME     = os.getenv("DB_NAME", "docdb")
 DB_USER     = os.getenv("DB_USER", "postgres")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # ─────────────────────────────────────────────────────────────────────────────
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
@@ -31,7 +31,7 @@ _REQUIRED_VARS = {
     "S3_BUCKET_NAME": S3_BUCKET_NAME,
     "DB_HOST":        DB_HOST,
     "DB_PASSWORD":    DB_PASSWORD,
-    "GOOGLE_API_KEY": GOOGLE_API_KEY,
+    "OPENAI_API_KEY": OPENAI_API_KEY,
 }
 _missing = [k for k, v in _REQUIRED_VARS.items() if not v]
 if _missing:
@@ -41,8 +41,8 @@ if _missing:
     )
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Configure Gemini
-genai.configure(api_key=GOOGLE_API_KEY)
+# Configure OpenAI client
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Configure S3 client (EC2 IAM role provides credentials automatically)
 s3_client = boto3.client("s3", region_name=AWS_REGION)
@@ -68,14 +68,22 @@ def extract_text_from_pdf(file_bytes):
 
 
 def generate_summary(text):
-    """Generate a concise summary using Google Gemini."""
-    model = genai.GenerativeModel("gemini-2.0-flash")
-    prompt = (
-        "Please provide a concise summary (3-5 sentences) of the following document:\n\n"
-        + text[:10000]  # limit to avoid token overflow
+    """Generate a concise summary using OpenAI."""
+    response = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    "Please provide a concise summary (3-5 sentences) of the following document:\n\n"
+                    + text[:10000]  # limit to avoid token overflow
+                ),
+            }
+        ],
+        max_tokens=500,
+        temperature=0.3,
     )
-    response = model.generate_content(prompt)
-    return response.text
+    return response.choices[0].message.content
 
 
 @app.route("/", methods=["GET"])
