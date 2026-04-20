@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()  # Load .env file before reading any env vars
 import boto3
 import psycopg2
 import google.generativeai as genai
